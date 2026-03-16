@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سحر المخاليط - عرض تفاعلي</title>
+    <!-- استدعاء الخطوط والأيقونات -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
+        /* ================= الإعدادات العامة ================= */
+        :root {
+            --bg-dark: #05010a;
+            --bg-magic: radial-gradient(circle at center, #2a114d 0%, #0d0714 100%);
+            --text-light: #e2e8f0;
+            --accent-yellow: #fde047;
+            --accent-green: #34d399;
+            --accent-purple: #a78bfa;
+            --border-magic: #5e35b1;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* ================= نظام الشرائح ================= */
+        .slider-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.8s ease-in-out, transform 0.8s ease-in-out;
+            transform: scale(0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: var(--bg-magic);
+            z-index: 1;
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1);
+            z-index: 10;
+        }
+
+        /* ================= أسهم التنقل ================= */
+        .nav-arrows {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1s ease;
+        }
+
+        .nav-arrows.visible {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .arrow-btn {
+            background: rgba(34, 22, 52, 0.7);
+            border: 2px solid var(--border-magic);
+            color: var(--accent-yellow);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(94, 53, 177, 0.5);
+            z-index: 101;
+        }
+
+        .arrow-btn:hover {
+            background: var(--border-magic);
+            color: #fff;
+            transform: scale(1.1);
+            box-shadow: 0 0 25px var(--accent-yellow);
+        }
+
+        .arrow-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* ================= الشريحة الأولى: المصباح التفاعلي ================= */
+        #slide-0 {
+            background: var(--bg-dark);
+            flex-direction: column;
+            transition: background 2s ease;
+        }
+
+        #slide-0.magic-on {
+            background: var(--bg-magic);
+        }
+
+        .lamp-container {
+            text-align: center;
+            cursor: pointer;
+            z-index: 20;
+            transition: transform 0.3s ease;
+        }
+
+        .lamp-container:hover {
+            transform: scale(1.05);
+        }
+
+        .magic-lamp-icon {
+            font-size: 120px;
+            color: #475569; 
+            transition: all 1s ease;
+            filter: drop-shadow(0 0 0 rgba(0,0,0,0));
+        }
+
+        .lamp-container.ignited .magic-lamp-icon {
+            color: var(--accent-yellow);
+            filter: drop-shadow(0 0 50px var(--accent-yellow));
+            animation: floatLamp 3s infinite ease-in-out;
+        }
+
+        @keyframes floatLamp {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .lamp-text {
+            margin-top: 20px;
+            font-size: 20px;
+            color: #64748b;
+            font-family: 'Amiri', serif;
+            letter-spacing: 1px;
+            transition: opacity 0.5s ease;
+        }
+
+        .lamp-container.ignited .lamp-text {
+            opacity: 0;
+        }
+
+        .intro-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1.5s ease 0.5s;
+            width: 90%;
+        }
+
+        .intro-content.revealed {
+            opacity: 1;
+            pointer-events: all;
+            margin-top: 100px;
+        }
+
+        .intro-content h1 {
+            font-family: 'Amiri', serif;
+            font-size: 60px;
+            color: var(--accent-yellow);
+            text-shadow: 0 0 30px rgba(253, 224, 71, 0.6);
+            margin-bottom: 20px;
+        }
+
+        .credits-box {
+            background: rgba(34, 22, 52, 0.6);
+            border: 1px solid var(--border-magic);
+            padding: 15px 30px;
+            border-radius: 20px;
+            display: inline-block;
+            backdrop-filter: blur(5px);
+        }
+
+        .credits-box p {
+            font-size: 18px;
+            margin: 10px 0;
+        }
+
+        .credits-box .student { color: var(--accent-green); }
+        .credits-box .teacher { color: var(--accent-yellow); }
+
+        /* ================= تنسيقات المحتوى للشرائح ================= */
+        .content-box {
+            background: rgba(22, 12, 40, 0.8);
+            border: 2px solid var(--border-magic);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 1000px;
+            width: 100%;
+            max-height: 85vh; /* مهم جداً للهواتف */
+            overflow-y: auto; /* إضافة التمرير إذا كان المحتوى طويلاً */
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.8), 0 15px 30px rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        /* تجميل شريط التمرير */
+        .content-box::-webkit-scrollbar { width: 8px; }
+        .content-box::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); border-radius: 10px; }
+        .content-box::-webkit-scrollbar-thumb { background: var(--accent-purple); border-radius: 10px; }
+
+        .slide-title {
+            font-family: 'Amiri', serif;
+            font-size: 40px;
+            color: var(--accent-yellow);
+            margin-bottom: 25px;
+            text-shadow: 0 0 15px rgba(253, 224, 71, 0.4);
+            text-align: center;
+            position: relative;
+        }
+
+        .slide-title::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 3px;
+            background: var(--accent-green);
+            margin: 15px auto 0;
+            box-shadow: 0 0 10px var(--accent-green);
+        }
+
+        .two-cols {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .two-cols > div {
+            flex: 1;
+        }
+
+        .text-content p {
+            font-size: 20px;
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+
+        .scientific-term {
+            color: var(--accent-yellow);
+            font-weight: bold;
+            background: rgba(253, 224, 71, 0.1);
+            padding: 2px 8px;
+            border-radius: 5px;
+            border: 1px solid rgba(253, 224, 71, 0.3);
+        }
+
+        .interactive-graphic {
+            width: 100%;
+            height: 250px;
+            background: rgba(0,0,0,0.4);
+            border: 2px solid var(--accent-purple);
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        .molecule {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            position: absolute;
+            box-shadow: inset -5px -5px 10px rgba(0,0,0,0.5);
+        }
+
+        .mol-a { background: var(--accent-green); animation: floatA 4s infinite alternate ease-in-out; }
+        .mol-b { background: var(--accent-purple); animation: floatB 5s infinite alternate ease-in-out; }
+
+        @keyframes floatA { 0% { transform: translate(0, 0); } 100% { transform: translate(40px, -30px); } }
+        @keyframes floatB { 0% { transform: translate(0, 0); } 100% { transform: translate(-40px, 30px); } }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .magic-card {
+            background: rgba(34, 22, 52, 0.6);
+            border: 1px solid var(--border-magic);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+        }
+
+        .magic-card i {
+            font-size: 40px;
+            color: var(--accent-green);
+            margin-bottom: 15px;
+            text-shadow: 0 0 15px rgba(52, 211, 153, 0.5);
+        }
+
+        .magic-card h3 {
+            color: var(--accent-yellow);
+            font-size: 22px;
+            margin-bottom: 10px;
+        }
+
+        /* ================= قسم الاختبار (Quiz) ================= */
+        .quiz-container {
+            text-align: right;
+        }
+
+        .question-block {
+            background: rgba(0,0,0,0.3);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-magic);
+        }
+
+        .question-text {
+            font-size: 20px;
+            color: var(--accent-yellow);
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .quiz-btn {
+            background: rgba(34, 22, 52, 0.8);
+            color: white;
+            border: 1px solid var(--accent-purple);
+            padding: 12px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: right;
+            font-size: 16px;
+            font-family: 'Cairo', sans-serif;
+            transition: 0.3s;
+        }
+
+        .quiz-btn:hover {
+            background: var(--border-magic);
+        }
+
+        .quiz-btn.correct {
+            background: var(--accent-green);
+            color: #000;
+            border-color: var(--accent-green);
+            pointer-events: none;
+            font-weight: bold;
+        }
+
+        .quiz-btn.wrong {
+            background: #ef4444;
+            color: white;
+            border-color: #ef4444;
+            pointer-events: none;
+        }
+
+        .quiz-btn.disabled {
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        /* تأثير الآلة الكاتبة للخاتمة */
+        .typewriter-box {
+            background: rgba(22, 12, 40, 0.9);
+            border: 2px dashed var(--accent-purple);
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(167, 139, 250, 0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .typewriter-text {
+            font-family: 'Amiri', serif;
+            font-size: 24px;
+            color: var(--accent-yellow);
+            line-height: 1.8;
+            border-left: 3px solid var(--accent-yellow);
+            white-space: pre-wrap;
+            display: inline-block;
+            text-align: center;
+            animation: blink 0.75s step-end infinite;
+            min-height: 200px;
+        }
+
+        @keyframes blink {
+            from, to { border-color: transparent }
+            50% { border-color: var(--accent-yellow); }
+        }
+
+        /* ================= التصميم المتجاوب (الهاتف الموبايل) ================= */
+        @media (max-width: 768px) {
+            .intro-content h1 { font-size: 40px; }
+            .slide-title { font-size: 30px; }
+            .two-cols { flex-direction: column; gap: 15px;}
+            .cards-grid { grid-template-columns: 1fr; }
+            .nav-arrows { padding: 0 10px; }
+            .content-box { padding: 20px; }
+            .text-content p { font-size: 18px; }
+            .typewriter-text { font-size: 18px; }
+            .lamp-text { font-size: 16px; }
+            
+            /* تعديل رقم (0) الضخم للهواتف */
+            .golden-rule-number { font-size: 100px !important; }
+        }
+
+        /* تأثير الجزيئات السحرية في الخلفية */
+        .particles {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 5;
+            display: none;
+        }
+        .particles.active { display: block; }
+        .particle {
+            position: absolute;
+            background: var(--accent-yellow);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--accent-yellow), 0 0 20px var(--accent-yellow);
+            animation: rise 5s infinite linear;
+            opacity: 0;
+        }
+        @keyframes rise {
+            0% { transform: translateY(100vh) scale(0); opacity: 0; }
+            20% { opacity: 0.8; }
+            80% { opacity: 0.5; }
+            100% { transform: translateY(-100px) scale(1.5); opacity: 0; }
+        }
+
+        /* ترقيم الشرائح */
+        .slide-counter {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--accent-purple);
+            font-size: 16px;
+            font-weight: bold;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+        .slide-counter.visible { opacity: 1; }
+
+    </style>
+</head>
+<body>
+
+    <div class="particles" id="particles-container"></div>
+
+    <div class="nav-arrows" id="nav-arrows">
+        <button class="arrow-btn" id="prev-btn" onclick="prevSlide()"><i class="fa-solid fa-chevron-right"></i></button>
+        <button class="arrow-btn" id="next-btn" onclick="nextSlide()"><i class="fa-solid fa-chevron-left"></i></button>
+    </div>
+
+    <div class="slide-counter" id="slide-counter">1 / 7</div>
+
+    <div class="slider-container">
+
+        <!-- الشريحة 0: المصباح التفاعلي -->
+        <div class="slide active" id="slide-0">
+            <div class="lamp-container" id="lamp" onclick="igniteMagic()">
+                <i class="fa-solid fa-oil-can magic-lamp-icon"></i>
+                <p class="lamp-text">اضغط على المصباح لإيقاظ السحر...</p>
+            </div>
+
+            <div class="intro-content" id="intro-text">
+                <h1>علم وسحر المخاليط</h1>
+                <div class="credits-box">
+                    <p class="student"><i class="fa-solid fa-flask"></i> إعداد الطالبة: <strong>سيدرا الجازي</strong></p>
+                    <p class="teacher"><i class="fa-solid fa-atom"></i> إشراف المعلمة: <strong>سحر الشياب</strong></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- الشريحة 1: المفهوم العلمي -->
+        <div class="slide" id="slide-1">
+            <div class="content-box">
+                <h2 class="slide-title">التفسير العلمي للمخلوط</h2>
+                <div class="two-cols">
+                    <div class="text-content">
+                        <p style="color: var(--accent-green); font-weight: bold; font-size: 24px;">ما هو المخلوط؟</p>
+                        <p>المخلوط عبارة عن <span class="scientific-term">مادتين أو أكثر</span> نخلطهم مع بعضهم البعض في نفس الوعاء.</p>
+                        <p>المدهش في المخلوط أن <strong>كل مادة تحتفظ بصفاتها الأساسية</strong> ولا تتغير! يعني إذا خلطنا رملاً مع ماء، الرمل يبقى رملاً والماء يبقى ماءً.</p>
+                    </div>
+                    <div class="interactive-graphic">
+                        <h3 style="position:absolute; top:10px; color:#64748b; font-size: 16px;">جزيئات لم تتغير (بقي كل لون كما هو)</h3>
+                        <div class="molecule mol-a" style="left: 30%; top: 40%;"></div>
+                        <div class="molecule mol-b" style="left: 60%; top: 60%;"></div>
+                        <div class="molecule mol-a" style="left: 70%; top: 30%;"></div>
+                        <div class="molecule mol-b" style="left: 20%; top: 70%;"></div>
+                        <div class="molecule mol-a" style="left: 50%; top: 50%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- الشريحة 2: أنواع المخاليط -->
+        <div class="slide" id="slide-2">
+            <div class="content-box">
+                <h2 class="slide-title">أنواع المخاليط</h2>
+                <div class="cards-grid">
+                    <div class="magic-card">
+                        <i class="fa-solid fa-droplet"></i>
+                        <h3>مخاليط متجانسة</h3>
+                        <p style="color: var(--accent-green); font-weight: bold; font-size: 16px;">(لا يمكننا رؤية مكوناتها)</p>
+                        <p style="margin-top: 10px; font-size: 16px;">تختفي مكوناتها وتمتزج معاً بشكل كامل، بحيث تبدو وكأنها مادة واحدة. <br><strong>أمثلة:</strong> ذوبان السكر في الماء، الهواء.</p>
+                    </div>
+                    <div class="magic-card">
+                        <i class="fa-solid fa-layer-group"></i>
+                        <h3>مخاليط غير متجانسة</h3>
+                        <p style="color: var(--accent-purple); font-weight: bold; font-size: 16px;">(يمكننا رؤية مكوناتها)</p>
+                        <p style="margin-top: 10px; font-size: 16px;">لا تمتزج مكوناتها تماماً، ويمكننا رؤية أجزائها المختلفة. <br><strong>أمثلة:</strong> طبق السلطة، الرمل في الماء.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- الشريحة 3: القاعدة الذهبية -->
+        <div class="slide" id="slide-3">
+            <div class="content-box" style="text-align: center;">
+                <h2 class="slide-title">القاعدة الذهبية للمخاليط</h2>
+                <div class="golden-rule-number" style="font-size: 150px; font-family: 'Amiri', serif; color: var(--accent-green); text-shadow: 0 0 40px rgba(52, 211, 153, 0.6); line-height: 1;">0</div>
+                <h3 style="font-size: 30px; color: var(--accent-yellow); margin-bottom: 20px;">مواد جديدة!</h3>
+                <p style="font-size: 20px; max-width: 850px; margin: 0 auto;">
+                    السر في المخلوط أنه مهما خلطنا مواد مع بعضها، <strong>لا تتكون أي مادة جديدة</strong>. وهذا هو السبب الذي يجعلنا قادرين على "فك السحر" وفصل المكونات عن بعضها لإرجاع كل مادة لحالها!
+                </p>
+            </div>
+        </div>
+
+        <!-- الشريحة 4: طرق الفصل -->
+        <div class="slide" id="slide-4">
+            <div class="content-box">
+                <h2 class="slide-title">طرق فصل المخاليط</h2>
+                <div class="two-cols">
+                    <div class="text-content">
+                        <ul style="list-style: none;">
+                            <li style="margin-bottom: 20px; display: flex; align-items: flex-start; gap: 15px;">
+                                <i class="fa-solid fa-filter" style="color: var(--accent-purple); font-size: 25px; margin-top: 5px;"></i>
+                                <div>
+                                    <strong style="color: var(--accent-yellow); font-size: 20px;">الترشيح:</strong>
+                                    <p style="font-size: 16px; margin-top: 5px;">نستخدم مصفاة أو ورقة ترشيح لفصل مادة صلبة عن سائل (كفصل الرمل عن الماء).</p>
+                                </div>
+                            </li>
+                            <li style="margin-bottom: 20px; display: flex; align-items: flex-start; gap: 15px;">
+                                <i class="fa-solid fa-temperature-arrow-up" style="color: #ef4444; font-size: 25px; margin-top: 5px;"></i>
+                                <div>
+                                    <strong style="color: var(--accent-yellow); font-size: 20px;">التبخير:</strong>
+                                    <p style="font-size: 16px; margin-top: 5px;">نسخن المخلوط ليطير السائل وتبقى المادة الصلبة (كالحصول على الملح من ماء البحر).</p>
+                                </div>
+                            </li>
+                            <li style="display: flex; align-items: flex-start; gap: 15px;">
+                                <i class="fa-solid fa-magnet" style="color: var(--accent-green); font-size: 25px; margin-top: 5px;"></i>
+                                <div>
+                                    <strong style="color: var(--accent-yellow); font-size: 20px;">الجذب المغناطيسي:</strong>
+                                    <p style="font-size: 16px; margin-top: 5px;">نستخدم المغناطيس لسحب المواد المصنوعة من الحديد.</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- الشريحة 5: الاختبار السحري (الجديدة) -->
+        <div class="slide" id="slide-5">
+            <div class="content-box">
+                <h2 class="slide-title">تحدي السحرة (اختبر معلوماتك)</h2>
+                <p style="text-align: center; margin-bottom: 20px; color: #cbd5e1;">أجب عن الأسئلة التالية لتثبت مهارتك الكيميائية (قم بالتمرير للأسفل لرؤية جميع الأسئلة)</p>
+                
+                <div class="quiz-container">
+                    <!-- سؤال 1 -->
+                    <div class="question-block">
+                        <p class="question-text">1. ما هو المخلوط؟</p>
+                        <div class="options">
+                            <button class="quiz-btn" data-correct="true" onclick="checkAnswer(this)">مزج مادتين أو أكثر دون تكون مادة جديدة</button>
+                            <button class="quiz-btn" data-correct="false" onclick="checkAnswer(this)">تفاعل كيميائي يغير صفات المادة</button>
+                            <button class="quiz-btn" data-correct="false" onclick="checkAnswer(this)">مادة واحدة نقية فقط</button>
+                        </div>
+                    </div>
+                    <!-- سؤال 2 -->
+                    <div class="question-block">
+                        <p class="question-text">2. أي من التالي يعتبر مخلوطاً متجانساً؟</p>
+                        <div class="options">
+                            <button class="quiz-btn" data-correct="false" onclick="checkAnswer(this)">طبق السلطة</button>
+                            <button class="quiz-btn" data-correct="true" onclick="checkAnswer(this)">الهواء الذي نتنفسه</button>
+                            <button class="quiz-btn" data-correct="false" onclick="checkAnswer(this)">الرمل والماء</button>
+                        </div>
+                    </div>
+                    <!-- سؤال 3 -->
+                    <div class="question-block">
+                        <p class="question-text">3. أي من التالي يعتبر مخلوطاً غير متجانس؟</p>
+                        <div class="options">
+                            <button class="quiz-btn" data-correct="false" onclick="checkAnswer(this)">الماء والسكر الذائب</button>
+                            <button class="quiz-btn" data-correct="false" onclick="checkAnswer(this)">عصير التفاح المصفى</button>
+                            <button class="quiz-btn" data-correct="true" onclick="checkAnswer(this)">المكسرات المشكلة</button>
+                        </div>
+                    </div>
+                    <!-- سؤال 4 -->
+                    <div class="question-block">
+                        <p class="question-text">4. عند خلط مادتين لتكوين مخلوط، هل تتكون مادة جديدة كلياً؟</p>
+                        <div class="options">
+                            <button class="quiz-btn" data-correct="false" onclick="checkAnswer(this)">نعم دائماً</button>
+                            <button class="quiz-btn" data-correct="true" onclick="checkAnswer(this)">لا، لا تتكون مادة جديدة</button>
+                            <button class="quiz-btn" data-correct="false" onclick="checkAnswer(this)">أحياناً فقط</button>
+                        </div>
+                    </div>
+                    <!-- سؤال 5 -->
+                    <div class="question-block">
+                        <p class="question-text">5. ما هي الطريقة الأفضل لفصل برادة الحديد عن الرمل؟</p>
+                        <div class="options">
+                            <button class="quiz-btn" data-correct="false" onclick="checkAnswer(this)">التبخير بالحرارة</button>
+                            <button class="quiz-btn" data-correct="false" onclick="checkAnswer(this)">الترشيح بالورق</button>
+                            <button class="quiz-btn" data-correct="true" onclick="checkAnswer(this)">استخدام المغناطيس</button>
+                        </div>
+                    </div>
+                    <!-- سؤال 6 -->
+                    <div class="question-block">
+                        <p class="question-text">6. كيف نفصل الملح الذائب عن الماء؟</p>
+                        <div class="options">
+                            <button class="quiz-btn" data-correct="false" onclick="checkAnswer(this)">الترشيح</button>
+                            <button class="quiz-btn" data-correct="true" onclick="checkAnswer(this)">التبخير</button>
+                            <button class="quiz-btn" data-correct="false" onclick="checkAnswer(this)">المغناطيس</button>
+                        </div>
+                    </div>
+                    <!-- سؤال 7 -->
+                    <div class="question-block">
+                        <p class="question-text">7. ما هي الأداة التي نستخدمها لفصل الرمل عن الماء؟</p>
+                        <div class="options">
+                            <button class="quiz-btn" data-correct="false" onclick="checkAnswer(this)">مغناطيس قوي</button>
+                            <button class="quiz-btn" data-correct="true" onclick="checkAnswer(this)">ورقة الترشيح (المصفاة)</button>
+                            <button class="quiz-btn" data-correct="false" onclick="checkAnswer(this)">ميزان الحرارة</button>
+                        </div>
+                    </div>
+                    <!-- سؤال 8 -->
+                    <div class="question-block">
+                        <p class="question-text">8. (المحلول) هو اسم آخر للمخلوط:</p>
+                        <div class="options">
+                            <button class="quiz-btn" data-correct="true" onclick="checkAnswer(this)">المتجانس</button>
+                            <button class="quiz-btn" data-correct="false" onclick="checkAnswer(this)">غير المتجانس</button>
+                            <button class="quiz-btn" data-correct="false" onclick="checkAnswer(this)">الصلب جداً</button>
+                        </div>
+                    </div>
+                    <!-- سؤال 9 -->
+                    <div class="question-block">
+                        <p class="question-text">9. ماء البحر المالح يعتبر:</p>
+                        <div class="options">
+                            <button class="quiz-btn" data-correct="false" onclick="checkAnswer(this)">مادة نقية واحدة</button>
+                            <button class="quiz-btn" data-correct="true" onclick="checkAnswer(this)">مخلوطاً متجانساً</button>
+                            <button class="quiz-btn" data-correct="false" onclick="checkAnswer(this)">مخلوطاً غير متجانس</button>
+                        </div>
+                    </div>
+                    <!-- سؤال 10 -->
+                    <div class="question-block">
+                        <p class="question-text">10. الهواء الذي نتنفسه هو مخلوط من:</p>
+                        <div class="options">
+                            <button class="quiz-btn" data-correct="false" onclick="checkAnswer(this)">مواد صلبة وسائلة</button>
+                            <button class="quiz-btn" data-correct="true" onclick="checkAnswer(this)">مجموعة من الغازات</button>
+                            <button class="quiz-btn" data-correct="false" onclick="checkAnswer(this)">سوائل فقط</button>
+                        </div>
+                    </div>
+                    <!-- سؤال 11 (صح أو خطأ) -->
+                    <div class="question-block">
+                        <p class="question-text">11. صح أم خطأ: في المخلوط، تفقد كل مادة صفاتها الأصلية وتتغير تماماً.</p>
+                        <div class="options">
+                            <button class="quiz-btn" data-correct="false" onclick="checkAnswer(this)">صح</button>
+                            <button class="quiz-btn" data-correct="true" onclick="checkAnswer(this)">خطأ</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- الشريحة 6: الخاتمة والشكر -->
+        <div class="slide" id="slide-6">
+            <div class="typewriter-box">
+                <i class="fa-solid fa-feather-pointed" style="font-size: 40px; color: var(--accent-purple); margin-bottom: 15px;"></i>
+                <div class="typewriter-text" id="typewriter-container"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- كود الجافاسكربت -->
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const counter = document.getElementById('slide-counter');
+        let isMagicOn = false;
+
+        const conclusionText = "وهكذا يا أصدقائي تنتهي رحلتنا السحرية في عالم المخاليط...\nتذكروا دائماً أن العلوم هي سحر الطبيعة الذي يمكننا فهمه!\n\nشكراً من القلب لمعلمتي الرائعة \"سحر الشياب\" التي أنارت لنا طريق العلم.\n\nمع تحيات الطالبة: سيدرا الجازي";
+        let typingInterval;
+        let isTyping = false;
+
+        function startTypewriter() {
+            const container = document.getElementById('typewriter-container');
+            if (isTyping) return; 
+            container.innerHTML = '';
+            let i = 0;
+            isTyping = true;
+            
+            clearInterval(typingInterval);
+            typingInterval = setInterval(() => {
+                if (i < conclusionText.length) {
+                    container.innerHTML += conclusionText.charAt(i);
+                    i++;
+                } else {
+                    clearInterval(typingInterval);
+                }
+            }, 60);
+        }
+
+        function resetTypewriter() {
+            const container = document.getElementById('typewriter-container');
+            container.innerHTML = '';
+            isTyping = false;
+            clearInterval(typingInterval);
+        }
+
+        function igniteMagic() {
+            if(isMagicOn) return; 
+            isMagicOn = true;
+
+            const lampContainer = document.getElementById('lamp');
+            const slide0 = document.getElementById('slide-0');
+            const introText = document.getElementById('intro-text');
+            const navArrows = document.getElementById('nav-arrows');
+            const slideCounter = document.getElementById('slide-counter');
+            const particles = document.getElementById('particles-container');
+
+            lampContainer.classList.add('ignited');
+            slide0.classList.add('magic-on');
+            particles.classList.add('active');
+            
+            setTimeout(() => {
+                introText.classList.add('revealed');
+                navArrows.classList.add('visible');
+                slideCounter.classList.add('visible');
+                updateArrows(); 
+                createParticles(); 
+            }, 800);
+        }
+
+        function showSlide(index) {
+            if (currentSlide === 6) resetTypewriter();
+
+            slides[currentSlide].classList.remove('active');
+            currentSlide = index;
+            slides[currentSlide].classList.add('active');
+            counter.innerText = `${currentSlide + 1} / ${slides.length}`;
+            updateArrows();
+
+            if (currentSlide === 6) {
+                setTimeout(startTypewriter, 800); 
+            }
+        }
+
+        function nextSlide() {
+            if (currentSlide < slides.length - 1) showSlide(currentSlide + 1);
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) showSlide(currentSlide - 1);
+        }
+
+        function updateArrows() {
+            prevBtn.disabled = currentSlide === 0;
+            nextBtn.disabled = currentSlide === slides.length - 1;
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (!isMagicOn) return; 
+            if (e.key === 'ArrowLeft') nextSlide(); 
+            else if (e.key === 'ArrowRight') prevSlide(); 
+        });
+
+        function createParticles() {
+            const container = document.getElementById('particles-container');
+            const colors = ['#fde047', '#34d399', '#a78bfa']; 
+            
+            for (let i = 0; i < 30; i++) {
+                let particle = document.createElement('div');
+                particle.classList.add('particle');
+                
+                let size = Math.random() * 6 + 2 + 'px';
+                let left = Math.random() * 100 + 'vw';
+                let duration = Math.random() * 5 + 3 + 's';
+                let delay = Math.random() * 5 + 's';
+                let color = colors[Math.floor(Math.random() * colors.length)];
+
+                particle.style.width = size;
+                particle.style.height = size;
+                particle.style.left = left;
+                particle.style.animationDuration = duration;
+                particle.style.animationDelay = delay;
+                particle.style.background = color;
+                particle.style.boxShadow = `0 0 10px ${color}, 0 0 20px ${color}`;
+
+                container.appendChild(particle);
+            }
+        }
+
+        // دالة فحص إجابات الاختبار
+        function checkAnswer(btn) {
+            let parent = btn.parentElement;
+            let options = parent.querySelectorAll('.quiz-btn');
+            let isCorrect = btn.getAttribute('data-correct') === 'true';
+
+            // تعطيل جميع الأزرار في نفس السؤال بعد الاختيار
+            options.forEach(b => b.classList.add('disabled'));
+
+            if (isCorrect) {
+                btn.classList.remove('disabled');
+                btn.classList.add('correct');
+                btn.innerHTML += ' <i class="fa-solid fa-check"></i>';
+            } else {
+                btn.classList.remove('disabled');
+                btn.classList.add('wrong');
+                btn.innerHTML += ' <i class="fa-solid fa-xmark"></i>';
+                
+                // إظهار الإجابة الصحيحة باللون الأخضر
+                options.forEach(b => {
+                    if(b.getAttribute('data-correct') === 'true') {
+                        b.classList.add('correct');
+                        b.classList.remove('disabled');
+                    }
+                });
+            }
+        }
+
+        counter.innerText = `1 / ${slides.length}`;
+        updateArrows();
+
+    </script>
+</body>
+</html>
+
+
